@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -13,24 +14,27 @@ func check(e error) {
 	}
 }
 
+type result struct {
+	resultsInLoss int
+	resultsInWin  int
+}
+
 var selection map[string]int = map[string]int{"X": 1, "Y": 2, "Z": 3, "A": 1, "B": 2, "C": 3}
 
-func result(theirInput string, ourInput string) int {
-	ourSelection := selection[ourInput]
+var necessaryInput map[int]result = map[int]result{1: {3, 2}, 2: {1, 3}, 3: {2, 1}}
+
+func matchResult(theirInput string, necessaryOutcome string) int {
 	theirSelection := selection[theirInput]
-	total := ourSelection
-	diff := theirSelection - ourSelection
-	//This method is similar to a DFA, if the number of possibilities expands this isn't tenable
-	if diff == 0 {
-		total += 3
-	} else if diff == 1 {
-	} else if diff == -1 {
-		total += 6
-	} else if diff == 2 {
-		total += 6
-	} else if diff == -2 {
+	switch necessaryOutcome {
+	case "X":
+		return necessaryInput[theirSelection].resultsInLoss
+	case "Y":
+		return theirSelection + 3
+	case "Z":
+		return necessaryInput[theirSelection].resultsInWin + 6
+	default:
+		panic(errors.New("invalid outcome string encountered"))
 	}
-	return total
 }
 
 func main() {
@@ -43,7 +47,7 @@ func main() {
 	for reader.Scan() {
 		unparsed := reader.Text()
 		parsed := strings.Fields(unparsed)
-		score += result(parsed[0], parsed[1])
+		score += matchResult(parsed[0], parsed[1])
 	}
 
 	fmt.Println(score)
